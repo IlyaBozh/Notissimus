@@ -1,5 +1,7 @@
 ﻿
+
 using Newtonsoft.Json;
+using Notissimus.Models;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -18,9 +20,9 @@ namespace Notissimus
             _url = url;
         }
 
-        public async Task<List<string>> GetOfferIds()
+        public async Task<List<Offer>> GetOffers()
         {
-            List<string> offerIds = new List<string>();
+            List<Offer> offers = new List<Offer>();
 
             XmlDocument xmlDoc = await GetAllOfferInfo();
 
@@ -28,23 +30,20 @@ namespace Notissimus
 
             foreach (XmlNode offerNode in offerNodes)
             {
-                if (offerNode.Attributes["id"] != null)
+                Offer offerData = new Offer
                 {
-                    string offerId = offerNode.Attributes["id"].Value;
-                    offerIds.Add(offerId);
-                }
+                    Id = offerNode.Attributes["id"].Value,
+                    Type = offerNode.Attributes["type"].Value,
+                    Bid = offerNode.Attributes["bid"].Value,
+                    Available = Convert.ToBoolean(offerNode.Attributes["available"].Value),
+                    Url = offerNode.SelectSingleNode("url").InnerText,
+                    Price = Convert.ToDecimal(offerNode.SelectSingleNode("price").InnerText)
+                };
+
+                offers.Add(offerData);
             }
 
-            return offerIds;
-        }
-
-        public async Task<string> GetOfferJsonById(string offerId)
-        {
-            XmlDocument xmlDoc = await GetAllOfferInfo();
-            XmlNode offerNode = xmlDoc.SelectSingleNode($"//offer[@id='{offerId}']");
-
-            string jsonOffer = JsonConvert.SerializeXmlNode(offerNode);
-            return jsonOffer;
+            return offers;
         }
 
         private async Task<XmlDocument> GetAllOfferInfo()
@@ -59,6 +58,16 @@ namespace Notissimus
 
             return xmlDoc;
         }
+
+        //осталось от предыдущей версии
+/*        public async Task<string> GetOfferJsonById(string offerId)
+        {
+            XmlDocument xmlDoc = await GetAllOfferInfo();
+            XmlNode offerNode = xmlDoc.SelectSingleNode($"//offer[@id='{offerId}']");
+
+            string jsonOffer = JsonConvert.SerializeXmlNode(offerNode);
+            return jsonOffer;
+        }*/
     }
 }
     
